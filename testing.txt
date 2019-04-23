@@ -1,0 +1,977 @@
+****
+****TESTING
+****
+
+WHERE POSSIBLE, FUNCTIONS RETURN A TRUE OR FALSE VALUE.
+
+
+THE PARSER'S CODE HAS BEEN TESTED WITH ALL OF THE FOLLOWING
+SAMPLE LOGO CODES. EACH OF THESE SAMPLE LOGO CODES AIMS TO
+REPLICATE POTENTIAL ERRORS THAT A USER COULD MAKE
+AND ENSURE THAT THE CORRECT ERROR MESSAGES WHERE
+PRINTED OUT.
+
+ALL OF THESE SAMPLE CODES HAVE BEEN TESTED SEVERAL
+TIMES AND AT LEAST TWICE:
+
+FIRST TIME: THROUGHT OUT DEVELOPING THE PARSER AND INTERPRER
+
+SECOND TIME: ONCE THE PARSER AND INTERPRETER WERE COMPLETE TO ENSURE
+NO ADJUSTEMENTS DURING THE DEVELOPMENT PHASE HAD AFFECTED
+THE OUTPUTS. IF ANY OF THE OUTPUTS WHERE FOUND TO BE
+AFFECTED WHILST MAKING CHANGES, THE ENTIRE PROCESS WAS
+REPEATED AGAIN.
+
+
+INSTRUCTION FUNCTIONS have Variable 'count'.
+It is only for the purpose
+of testing to make sure the program is
+going through all required steps correctly.
+
+
+
+
+======================================================
+Tests for: bool num_instructions(FILE* fw, Program *p)
+======================================================
+
+=================== NUMBER 1 =========================
+* Test program exits if numbers are too large
+resulting in a buffer overflow.
+
+* Expected output:
+"'100000000000000' is an invalid number.
+Numbers need to be smaller than 100 million."
+
+* LOGO fragments:
+{
+ FD 100000000000000
+}
+
+{
+FD 3
+LT 567
+RT 100000000000
+}
+
+{
+   DO A FROM 50000000000 TO 8 {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+===================== NUMBER 2 ========================
+* Test program with empty file
+
+* Expected output:
+////PROGRAM ERROR///
+In Function: 'int num_instructions(FILE* fw, Program *p)',
+failure to count instructions from file or file contains
+no instructions.
+
+Valid LOGO programs need to contain at at least
+one instruction preceeded by an opening bracket '{' and terminated
+by a closing bracket '}'.
+
+* LOGO fragment:
+Empty text file
+
+
+
+=======================================================
+tests for : void mem_for_instrs(Program *p)
+=======================================================
+Error messaging contained within program to flag memory
+not being allocated
+
+
+=======================================================
+tests for: void save_instr(FILE* fw, Program *p)
+=======================================================
+The function "void save_instr(FILE* fw, Program *p)"
+that assigns each instruction and its line number
+from the LOGO program into an array was tested by
+printing out the array of structures and was
+matched against the text file containing the
+LOGO program. This enabled indirectly the testing
+of the following three functions as they are the
+functions responsible for allocating memory space
+for the array of structures and we wouldn't have
+been able to print out the array if memory had not
+been allocated correctly:
+
+- void mem_for_instrs(Program *p)
+- int num_instructions(FILE* fw, Program *p)
+- Program* create_mem()
+
+The test was operated with the following printing code fragment:
+for (j=0; j<p->ni; j++) {
+  printf("%s (line: %d) ", p->list[j]->instr, p->list[j]->line);
+  if (p->list[j]->line != p->list[j+1]->line) {
+    printf("\n");
+  }
+}
+
+
+=======================================================
+TESTS FOR: void Prog(Program *p, SDL_Simplewin *sw)
+=======================================================
+====================== NUMBER 1 =======================
+*Missing opening paranthese
+
+* Expected Output:
+No begining instruction. Start program with '{'.
+
+missing opening brackets.
+
+* LOGO Fragment
+FD 3
+LT 567
+RT 5902
+}
+
+====================== NUMBER 2 =======================
+*Missing closing paranthese
+
+* Expected Output:
+No closing bracket. A '}' has been added for you at
+the end of the program.
+
+Note: as we are inserting a bracket at the end if there
+is one missing, the function that checks whether all closing
+and opening brackets are there does not return an error
+message unlike when it is the first bracket missing.
+
+* LOGO Fragment
+{
+FD 3
+LT 567
+RT 5902
+
+====================== NUMBER 3 =======================
+*Missing closing paranthese & opening one
+
+* Expected Output:
+No begining instruction. Start program with '{'.
+
+No closing bracket. A '}' has been added for you at the end of the program.
+
+missing opening brackets.
+
+* LOGO Fragment
+FD 3
+LT 567
+RT 5902
+
+
+=======================================================
+TEST FOR: int check_FD_LT_RT(Program *p)
+=======================================================
+
+The following fragments of LOGO code test by extension
+the following functions too:
+ - void not_valid_instr(Program *p);
+ - void validate_VARNUM(Program *p)
+ - void validate_VAR(Program *p)
+
+
+=================== NUMBER 1 ===========================
+* expected output: Nothing (code below is correct)
+{
+FD 30
+LT 30
+RT 30
+}
+
+=================== NUMBER 2 ===========================
+* Test without numbers for the FD, LT and RT functions
+* Tests the conditions in the check_VARNUM function and
+how the program deals with missing numbers.
+
+* Expected output:
+Line 3: 'LT' is not a valid number or letter.
+Variables are a single uppercase letter or a positive
+integer number.
+
+Line 2: There might be missing a variable number or
+letter after instruction 'FD' or the instruction and variable
+number or letter may have been inverted. Make sure instructions
+'SET', 'DO', 'FD', 'LT', 'RT' are followed by a letter or number.
+
+* LOGO Fragment
+{
+FD
+LT 30
+RT 30
+}
+
+===================== NUMBER 3 ================================
+*  With error in instruction (SD and LBT not being valid instructions)
+tests specifically the function: void not_valid_instr(Program *p)
+
+* Expected Output:
+Line 2: Only FD, LT, RT, DO and SET are valid instructions.
+Did you mean one of those instead of 'SD'?.
+
+Line 3: Only FD, LT, RT, DO and SET are valid instructions.
+Did you mean one of those instead of 'LBT'?.
+
+* LOGO Fragment
+{
+SD 30
+LBT 30
+RT 40
+}
+
+===================== NUMBER 4 ==================================
+* tests that lower case letters for instructions are picked up
+including with errors in the INSTRUCTIONS
+tests specifically the function: void not_valid_instr(Program *p)
+
+* Expected Output:
+Line 2: Only FD, LT, RT, DO and SET are valid instructions.
+Did you mean one of those instead of 'st'?.
+
+Line 3: instruction 'rt' needs to be written in uppercase letters.
+
+Line 4: instruction 'fd' needs to be written in uppercase letters.
+
+* LOGO Fragment
+{
+st 30
+rt 30
+fd 40
+}
+
+==================== NUMBER 5 ===========================
+* inversion of order of instruction name and VARNUM
+
+* Expected Output: Error message about potential inversion of LETTERS
+
+Line 3: 'RT' is not a valid number or letter.
+Variables are a single uppercase letter or a positive integer number.
+
+Line 2: There might be missing a variable number or letter after
+instruction 'LT' or the instruction and variable number or letter
+may have been inverted. Make sure instructions 'SET', 'DO', 'FD',
+'LT', 'RT' are followed by a letter or number.
+
+* LOGO Fragment
+{
+30 LT
+RT 30
+LT 40
+}
+
+======================== NUMBER 6 =============================
+* Testing that the next instruction is read properly
+even if there is an error in the instruction preceding it. Tests:
+ - void validate_VARNUM(Program *p)
+ - void validate_VAR(Program *p)
+ - void not_valid_instr(Program *p)
+
+* Expected Output:
+Line 3: 'a' is not a valid number or letter.
+Variables are a single uppercase letter or a positive integer number.
+
+Line 4: Only FD, LT, RT, DO and SET are valid instructions.
+Did you mean one of those instead of 'bcdefg'?.
+
+* LOGO Fragment
+{
+FD a
+LT bcdefg
+RT 30
+}
+
+======================= NUMBER 7 ================================
+* Tests that the "int check_FD_LT_RT(Program *p)"
+picks up stray characters at the end of instructions or additional
+numbers that should not be there.
+N.B. Will not pick up stray closing brackets.
+
+* Expected output:
+Line 2: ';' is not valid. The instruction 'FD 200' needs to be followed by:
+ - another instruction ('FD', 'DO', 'RT', 'LT' or 'SET') OR
+ - by a closing closing bracket '}'
+
+Line 3: '90' is not valid. The instruction 'RT 90' needs to be followed by:
+ - another instruction ('FD', 'DO', 'RT', 'LT' or 'SET') OR
+ - by a closing closing bracket '}'
+
+{
+   FD 200 ;
+   RT 90 90
+   FD 300
+   LT 90
+   FD 200
+}
+
+
+NUMBER 3. Negative numbers
+Expected Output: the program does not accept negative numbers
+{
+FD -3
+LT 567
+RT 100
+}
+
+
+=============================================================
+TESTS FOR <VAR>
+=============================================================
+====================== NUMBER 1 =============================
+* tests Invalid <VAR> letter
+
+* Expected output:
+Line 2: 'abc' is an invalid letter. Enter a single uppercase letter.
+
+* LOGO Fragment
+{
+   DO abc FROM 1 TO 8 {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+
+===================== NUMBER 2 ==============================
+* tests Invalid <VAR> letter
+
+* Expected output:
+Line 2: 'AAA' is an invalid letter. Enter a single uppercase letter.
+
+* LOGO Fragement
+{
+   DO AAA FROM 20 TO 8 {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+================================================
+TESTS FOR <DO> STATEMENT IN PARSER
+================================================
+
+=============== NUMBER 1 =======================
+* Testing DO statement - valid statement
+* Expected Output: no error messages
+*LOGO Fragement
+{
+   DO A FROM 1 TO 8 {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+=============== NUMBER 2 ======================
+* Test the return message for an Invalid "FROM"
+* Expected Output:
+Line 2: did you mean 'FROM' instead of 'sdf?'.
+* LOGO Fragement
+
+{
+   DO A sdf 1 TO 8 {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+============== NUMBER 3 =========================
+* Test that a Missing number in a DO statment gets
+picked up
+
+* Expected Output: Error message about a number
+missing after 'TO' and '{' not being a valid number.
+
+Line 2: '{' is not a valid number or letter.
+Variables are a single uppercase letter or a positive integer number.
+
+Line 2: There might be missing a variable number or letter after
+instruction 'TO' or the instruction and variable number or letter
+may have been inverted. Make sure instructions 'SET', 'DO', 'FD', 'LT', 'RT'
+are followed by a letter or number.
+
+* LOGO Frament
+{
+   DO A FROM 20 TO  {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+
+================== NUMBER 4 ========================
+* test to check a Missing opening paranthese gets
+picked up
+* Expected Output: Error message about the opening
+bracket missing.
+* LOGO Fragment
+{
+   DO A FROM 20 TO 8
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+
+================== NUMBER 5 =======================
+* Incorrectly spelt 'TO' instruction
+* Expected output: Message about 'TO' being incorrect
+* LOGO Fragment
+{
+   DO A FROM 20 fff 8 {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+================= NUMBER 5 ==========================
+* Missing 'TO' instruction and Missing a VAR between 'DO'
+and 'FROM'
+* Expected output:
+Line 2: 'FROM' is an invalid letter. Enter a single uppercase letter.
+
+Line 2: There might be missing a variable number or letter after
+instruction 'DO' or the instruction and variable number or letter
+may have been inverted. Make sure instructions 'SET', 'DO', 'FD',
+'LT', 'RT' are followed by a letter or number.
+
+Line 2: it looks like the instruction 'TO' is missing from the 'DO'
+statement.
+
+* LOGO Fragment
+{
+   DO  FROM 20 8 {
+      FD 30
+      LT 567
+      RT 5902
+   }
+}
+
+
+====================================================
+TESTS FOR CHECK_SET and INTERPRET_SET FUNCTIONS
+====================================================
+================= NUMBER 1 =========================
+* correct code
+* Expected Output: Nothing
+* LOGO FRAGMENT
+{
+   SET C := A 5 / ;
+   FD C
+}
+
+================= NUMBER 2 =========================
+* test error message for too many variables
+* Expected output: 'Error in the 'SET' instruction. There might be too many
+variable for the number of instructions.'
+Note: the program should continue to run as we pick the top number on
+the stack as the resulting*LOGO fragment
+
+{
+   SET C := A B 40 / ;
+   FD C
+}
+
+================= NUMBER 3 ===========================
+Expected Output: message about the VAR 'CC' being incorrect
+{
+   SET CC := A 5 / ;
+   FD C
+}
+
+================= NUMBER 4 ===========================
+* missing VAR
+Expected Output: Error message about the missing VAR
+{
+   SET  := A 5 / ;
+   FD C
+}
+
+================= NUMBER 5 ===========================
+* missing ':='
+* Expected Output: Error message about the missing ':='
+{
+   SET C A 5 / ;
+   FD C
+}
+
+================= NUMBER 6 ===========================
+* incorrect ':='
+Expected Output: Error message about the incorrect ':='
+{
+   SET C = A 5 / ;
+   FD C
+}
+
+================= NUMBER 7 ===========================
+* incorrect VAR
+Expected Output: Error message about the incorrect VAR '3'
+{
+   SET 3 := A 5 / ;
+   FD C
+}
+
+================= NUMBER 8 ===========================
+* Tests that no more than one VAR is used in
+the SET function
+* Expected Output: Error message about there being
+too many variables before the equal sign
+{
+   SET A C 10 := 5 10 + A - C 20 / ;
+   SET B := D E * ;
+   FD C
+}
+
+================= NUMBER 9 ===========================
+* Missing ';'
+Expected Output: Error message about the ';' missing
+{
+   SET C := A 5 /
+   FD C
+}
+
+=====================================================
+TESTS FOR <OP> and <POLISH>
+=====================================================
+================= NUMBER 1 ===========================
+* Testing the recursion of the POLISH function
+and the operators
+* Expected Output: nothing. Code correct
+{
+   SET A := 5 10 + A - C 20 / ;
+   SET B := D E * ;
+   FD C
+}
+
+================= NUMBER 2 ===========================
+* Testing the operators
+* Expected Output: Error message about the operators
+being incorrect
+{
+   SET A := 5 10 .+ A - C 20 / ;
+   SET B := D E * ;
+   FD C
+}
+
+================= NUMBER 3 ===========================
+* Tests that all operators are read correctly
+* Expected Output: 4 error messages all relating to the
+operators being incorrect
+{
+   SET A := 10 .+ A !- C 20 :/ ;
+   SET B := D E .* ;
+   FD C
+}
+
+
+======================================================
+TEST FOR THE DO LOOP FUNCTIONS
+======================================================
+TEST FOR NESTED LOOPS
+
+==================== NUMBER 1 ========================
+* Ensures recursion is working properly for Nested Loops
+* Expected Output: Code from the document in class was
+matched against output on SDL screen to verify the correctness
+of the code
+{
+   DO A FROM 1 TO 50 {
+   FD A
+   RT 30
+   DO B FROM 1 TO 8 {
+      SET C := A 5 / ;
+      FD C
+      RT 45
+   }
+  }
+}
+
+
+==================== NUMBER 2 ========================
+* Test to see if independent loops within a nested loop
+work.
+* To check the correctness of it, I used squares and checked
+that they were each being drawn correctly each time for the
+number of times required. Printf statements in the code also
+verified whether the output was correct.
+{
+   DO A FROM 1 TO 8 {
+     FD 100
+   DO B FROM 1 TO 5 {
+      FD 100
+      RT 90
+   }
+   DO B FROM 1 TO 5 {
+      FD 50
+      LT 90
+   }
+  }
+}
+
+==================== NUMBER 3 ================
+{
+DO B FROM 1 TO 5 {
+   FD 100
+   RT 90
+}
+}
+
+================ NUMBER 4 ==================
+* test to ensure that the program dosen't break
+if there are several nested loops
+* expected output: program to run as normal
+* LOGO Fragement
+{
+  DO A FROM 1 TO 50 {
+    FD A
+    RT 30
+    DO B FROM 1 TO 8 {
+    SET C := A 5 / ;
+    FD C
+    RT 45
+    DO F FROM 1 TO 8
+    SET D := C 5 / ;
+    FD D
+    RT 45
+    }
+  }
+}
+
+==========================================================
+TESTING CONNECTIONS BETWEEN FUNCTIONS
+==========================================================
+================ NUMBER 1 ================================
+* Several errors in the same fragment of code to
+ensure errors don't affect the output relating to ERRORS
+later in the code.
+Expected Output:
+missing opening brackets.
+
+Line 2: 'a' is an invalid letter. Enter a single uppercase letter.
+
+Line 2: did you mean 'TO' instead of 'To'?.
+
+Line 2: '{' is not a valid number or letter.
+Variables are a single uppercase letter or a positive integer number.
+
+Line 2: There might be missing a variable number or letter after
+instruction 'To' or the instruction and variable number or letter
+may have been inverted. Make sure instructions 'SET', 'DO', 'FD', 'LT', 'RT'
+are followed by a letter or number.
+
+Line 4: 'RT' is not a valid number or letter.
+Variables are a single uppercase letter or a positive integer number.
+
+Line 3: There might be missing a variable number or letter after
+instruction 'RT' or the instruction and variable number or letter
+may have been inverted. Make sure instructions 'SET', 'DO', 'FD', 'LT', 'RT'
+are followed by a letter or number.
+
+Line 6: The instruction 'SET', line 6 is missing an ending ';'.
+
+{
+   DO a FROM 1 To  {
+
+      RT
+      RT 30
+      SET C := A 5 /
+   }
+  }
+}
+
+======================== NUMBER 2 ==========================
+* Test with several errors and closing brackets in they
+middle of the code to make sure all errors are picked up and recursion
+is working to the end. I inserted print statements to ensure EACH
+instruction was actually being read through out.
+* Expected Output: various error messages and a last message ABOUT
+the missing variable.
+{
+DO A FROM 1 TO 10 {
+SET C := 10 30 + 5 * 6 + 7 8 + 9 + / ;
+
+}
+FD a
+RT
+DO f from A to X {
+LT 10
+DS X
+}
+RT
+
+========================================================
+TESTS TO VERIFY OUTPUT OF ANGLES ARE CORRECT. Tests
+were run with both left and righ angles. Only the right
+ones are displayed here.
+========================================================
+
+Print statements used to verify formulas and next
+coordinate points are correct:
+      printf("distance:%d\n", distance);
+printf("VALUE OF COS: %f\n", cosinus);
+printf("VALUE OF SIN: %f\n", sinus);
+printf("VALUE x2: %f\n", x2);
+printf("VALUE p->x: %d\n", p->x);
+printf("VALUE y2:%f\n", y2);
+printf("VALUE p->y: %d\n\n", p->y);
+
+======================== NUMBER 1 ==========================
+* Testing angles between
+90 and 180 for RT instructions
+* expected output looked something
+like this for each of the sets of
+LOGO code.
+distance:60
+VALUE OF COS: 1.000000
+VALUE OF SIN: 0.000000
+VALUE x2: 60.000000
+VALUE p->x: 60
+VALUE y2:0.000000
+VALUE p->y: 0
+
+distance:50
+VALUE OF COS: 0.000796
+VALUE OF SIN: 1.000000
+VALUE x2: 60.039818
+VALUE p->x: 60
+VALUE y2:49.999985
+VALUE p->y: 50
+
+distance:40
+VALUE OF COS: -0.051514
+VALUE OF SIN: 0.998672
+VALUE x2: 57.939430
+VALUE p->x: 58
+VALUE y2:89.946892
+VALUE p->y: 90
+
+distance:30
+VALUE OF COS: -0.865361
+VALUE OF SIN: 0.501149
+VALUE x2: 32.039169
+VALUE p->x: 32
+VALUE y2:105.034470
+VALUE p->y: 105
+
+distance:20
+VALUE OF COS: -0.999819
+VALUE OF SIN: 0.019036
+VALUE x2: 12.003624
+VALUE p->x: 12
+VALUE y2:105.380722
+VALUE p->y: 105
+
+{
+FD 60
+RT 90
+FD 50
+RT 93
+FD 40
+RT 150
+FD 30
+RT 179
+FD 20
+}
+
+
+For each case, the values of the next x and y were printed out AND
+matched against the values given by the calculator. The position of
+X and Y was also checked visually with a small 30 x 30 plain text screen being
+printed out. The cross indicates the position of X and Y. The position of
+X and Y was checked to see it matches the expected output.
+
+Example of the screen being printed out:
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+x..............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+...............................
+
+======================== NUMBER 2 =========================
+Tests angles between 181 and 279.
+Also tests that the angle is reset to 0 when
+an FD instruction is executed and that x and/or
+y are set to equal 0 if the value of x and y
+is less than 0.
+{
+   FD 20
+   RT 90
+   FD 20
+   DO C FROM 1 TO 5 {
+    SET A := A 2 + ;
+    FD A
+    RT 200
+ }
+}
+
+======================== NUMBER 3 =========================
+* Tests angles between 0 and 89
+{
+   DO C FROM 1 TO 5 {
+    SET A := A 2 + ;
+    FD A
+    RT 30
+ }
+}
+
+======================== NUMBER 4 =========================
+* Tests angles between 89 and 197
+{
+   FD 20
+   DO C FROM 1 TO 5 {
+    SET A := A 2 + ;
+    FD A
+    RT 100
+ }
+}
+
+======================== NUMBER 5 =========================
+* Tests angles between 271 and 359
+{
+   FD 15
+   RT 90
+   FD 15
+   DO C FROM 1 TO 5 {
+    SET A := A 2 + ;
+    FD A
+    RT 300
+ }
+}
+
+==================================================
+TESTING INTERPRET_SET FUNCTION
+==================================================
+Tested various combinations to make sure the correct
+result was returned
+
+================ NUMBER 1 ========================
+
+Expected Output: 5;
+{
+SET C := 10 2 / ;
+}
+
+================ NUMBER 2 ========================
+Expected Output: 5
+{
+SET C := J 2 / ;
+}
+
+
+
+================ NUMBER 3 ========================
+The following formula was taken from the course
+notes on reverse polish notation and a series of print
+statements were used to verify the result at each stage AND
+were mapped against the course notes to make sure the function
+instruct_SET was functioning correctly for each type of operation.
+
+{
+SET C := 8 2 5 * + 1 3 2 * + 4 - / ;
+}
+
+Expected Output - this output was mapped against the course
+notes to verify the correctness of the SET interpretation function:
+m = 8.000000
+stack[1] = 8.000000
+m = 2.000000
+stack[2] = 2.000000
+m = 5.000000
+stack[3] = 5.000000
+OP *: Base -2 = 2 (value: 2.000000)
+& Base -1= 3 (value: 5.000000)
+Value of result = 10.000000
+stack[2]: 10.000000
+END MUL
+
+OP +:  Base -2 = 1 (value: 8.000000)
+& Base -1= 2 (value: 10.000000)
+Value of result = 18.000000
+stack[1]: 18.000000
+END ADDITION
+
+m = 1.000000
+stack[2] = 1.000000
+m = 3.000000
+stack[3] = 3.000000
+m = 2.000000
+stack[4] = 2.000000
+OP *: Base -2 = 3 (value: 3.000000)
+& Base -1= 4 (value: 2.000000)
+Value of result = 6.000000
+stack[3]: 6.000000
+END MUL
+
+OP +:  Base -2 = 2 (value: 1.000000)
+& Base -1= 3 (value: 6.000000)
+Value of result = 7.000000
+stack[2]: 7.000000
+END ADDITION
+
+m = 4.000000
+stack[3] = 4.000000
+//OP -: Base -2 = 2 (value: 7.000000)
+& Base -1= 3 (value: 4.000000)
+Value of result = 3.000000
+stack[2]: 3.000000
+END SUB
+
+OP /: Base -2 = 1 (value: 18.000000)
+& Base -1= 2 (value: 3.000000)
+Value of result = 6.000000
+stack[1]: 6.000000
+END DIV
+
+RESULT: 6.000000
+
+
+================ NUMBER 4 ========================
+Test to make sure the bit in Interpret_SET
+when there is no operation to perform is functioning properly.
+Expected output: In the var_value array, A (position 0 in the array)
+should be equal to 2 and C (position 2 in the array), should be equal
+to 2 - Output verified by means on print statement
+(example output of print statement used just before "return"
+in the interpret_SET function in the section under "if(top==2)
+VAR: C, VALUE: 2.000000)
+{
+  SET A := 2 ;
+  SET C := A ;
+}
